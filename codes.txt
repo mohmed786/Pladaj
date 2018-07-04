@@ -1,0 +1,211 @@
+Used Codes :
+headers= {
+      "X-Shopify-Access-Token": session.get("access_token"),
+      "Content-Type": "application/json"
+  }
+  endpoint = "/admin/script_tags.json"
+  response = requests.get("https://{0}{1}".format(session.get("shop"),
+                                                  endpoint), headers=headers)
+
+  if response.status_code == 200:
+          scripts =  json.loads(response.text)
+          print(scripts)
+
+          return render_template('products.html',scr=scripts)
+
+  else:
+          return False
+
+          __________________________________________________________________
+
+
+          from flask import Flask, render_template, request, redirect, Response, session
+          from config import Config as cfg
+          #from urllib import request, parse
+          #import http.client
+          import json
+          import requests
+
+
+          app = Flask(__name__, template_folder="templates")
+          app.debug = True
+          app.secret_key = cfg.SECRET_KEY
+
+          @app.route('/curr_script', methods = ["GET"])
+
+          def script_authenticate():
+
+                headers= {
+                    "X-Shopify-Access-Token": session.get("access_token"),
+                    "Content-Type": "application/json"
+                }
+                endpoint = "/admin/script_tags.json"
+                response = requests.get("https://{0}{1}".format(session.get("shop"),
+                                                                endpoint), headers=headers)
+                print(response.status_code)
+
+                if response.status_code == 200:
+                        scripts =  json.loads(response.text)
+                        print(scripts)
+
+                        return render_template('products.html',scr=scripts)
+
+                else:
+                        return render_template('error1.html')
+
+
+
+          @app.route('/script', methods=["GET","POST"])
+
+          def script_auth():
+
+          #   resultx = get_method()
+          #   resulty = get_method2()
+              headers = {
+                           "X-Shopify-Access-Token": session["access_token"],
+                            "Accept": "application/json",
+                            "Content-Type": "application/json" }
+
+              payload = { "script_tag": {
+                        "src": "https://www.nmf786.ga/hello.js",
+                        "event": "onload"
+                                        }
+                         }
+
+              #json_data = parse.urlencode(script_tag).encode('utf8')
+              endpoint = "/admin/script_tags.json"
+
+              url = "https://{0}{1}".format(session['shop'],endpoint)
+              #url = "https://{0}{1}".format( session['shop'] , endpoint)
+              #json1 = json.dumps(script_tag)
+
+
+              req = requests.post(url , json = payload, headers = headers)
+
+              print (req.status_code, req.content)
+
+              if req.status_code == 201:
+                      return render_template("middle.html", scr = req.content, )
+              else:
+                      return render_template("error.html", scr = req.content)
+
+              #r = requests.post(""https://{0}{1}".format( session.get("shop") , endpoint", data=payload)
+              #req = request.Request(url,data =json_data , method = 'POST' , headers = {
+                                                                                  #    "X-Shopify-Access-Token": session.get("access_token"),
+                                                                                  #                    "Content-Type": "application/json" })
+              #resp = request.urlopen(req)
+              #if resp.status_code == 201:
+              #    return render_template('products.html',scr="Hola Amigo!")
+              #else:
+              #    return render_template('error.html')
+              #conn.request('POST','/v3/call_api' , params , headers)
+              #resp = conn.getresponse()
+              #if resp.status_code == 201:
+              #req = urllib.request.Request("https://{0}{1}".format( session.get("shop") , endpoint) , data=params , headers=headers)
+              #response = urllib.request.urlopen(req)
+              #if request.method == "POST"
+               #response = requests.post(url="https://{0}{1}".format( session.get("shop") , endpoint) , json = script_tag , headers=headers)
+
+
+          #def get_method():
+          #        if request.method == "GET":
+          #            x = session.get("access_token")
+          #            return x
+
+
+          #def get_method2():
+          #        if request.method == "GET":
+          #            y =  session.get("shop")
+          #            return y
+
+          @app.route('/install', methods=['GET'])
+          def install():
+
+              if request.args.get('shop'):
+                  shop = request.args.get('shop')
+              else:
+                  return Response(response="Error:parameter shop not found", status=500)
+
+              auth_url = "https://{0}/admin/oauth/authorize?client_id={1}&scope={2}&redirect_uri={3}".format(
+                  shop, cfg.SHOPIFY_CONFIG["API_KEY"], cfg.SHOPIFY_CONFIG["SCOPE"],
+                  cfg.SHOPIFY_CONFIG["REDIRECT_URI"]
+              )
+              print("Debug - auth URL: ", auth_url)
+              return redirect(auth_url)
+
+
+          @app.route('/connect', methods=['GET'])
+          def connect():
+              if request.args.get("shop"):
+                  params = {
+                      "client_id": cfg.SHOPIFY_CONFIG["API_KEY"],
+                      "client_secret": cfg.SHOPIFY_CONFIG["API_SECRET"],
+                      "code": request.args.get("code")
+                  }
+                  resp = requests.post(
+                      "https://{0}/admin/oauth/access_token".format(
+                          request.args.get("shop")
+                      ),
+                      data=params
+                  )
+
+                  if 200 == resp.status_code:
+                      resp_json = json.loads(resp.text)
+
+                      session['access_token'] = resp_json.get("access_token")
+                      session['shop'] = request.args.get("shop")
+
+                      return render_template('welcome.html', from_shopify=resp_json)
+                  else:
+                      print ("Failed to get access token: "), resp.status_code, resp.text
+                      return render_template('error.html')
+
+
+
+
+          if __name__ == "__main__":
+              app.run(host="0.0.0.0", port=8080)
+
+
+
+
+
+
+          <div>
+
+          {% for k,v in scr.items() %}
+              <h4>{{ '{0}:{1}'.format(k,v) }}</h4>
+            {% endfor %}
+
+          </div>
+
+
+
+          var img = new Image();
+          img.src = $('img').attr('src');
+          //img.style.position = "absolute";
+          img.style.left = -9999;             // Image width must not exceed 9999 pixels
+          //img.style.visibility = "hidden";    // Maybe you can remove this
+          //document.body.appendChild(img);
+          var imgHeight = img.height;
+          var imgWidth = img.width;
+          //alert("image height = "  + imgHeight + ", image width = " + imgWidth);
+          //document.body.removeChild(img);     /
+
+
+              $('img').attr("data-zoom-image", "https://img.gs/wrsxcbbsgt/" + imgHeight+ "x" +imgWidth +",2x,fit/"+ $('img').attr('src'));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              
