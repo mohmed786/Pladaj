@@ -2,8 +2,6 @@
 
 from flask import Flask, render_template, request, redirect, Response, session
 from config import Config as cfg
-#from urllib import request, parse
-#import http.client
 import json
 import requests
 
