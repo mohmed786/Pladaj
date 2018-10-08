@@ -1,3 +1,5 @@
+#Shopify App Souce Code
+
 from flask import Flask, render_template, request, redirect, Response, session
 from config import Config as cfg
 #from urllib import request, parse
